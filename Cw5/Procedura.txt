@@ -1,0 +1,23 @@
+create procedure cw5 @Studies nvarchar(100),@Semester int
+as
+begin
+    declare @idstudies int=(Select IdStudy from Studies where Name=@Studies);
+    if @idstudies is null
+    begin
+        raiserror('Not found',16,1) ;
+    end
+    declare @idenrollment int=(Select IdEnrollment from Enrollment where Semester=@Semester);
+    if @idenrollment is null
+ begin
+        raiserror('Not found',16,1) ;
+    end
+    declare @x int=(select IdEnrollment from Enrollment inner join Studies on Enrollment.IdStudy = Studies.IdStudy where Semester=@Semester+1 and Name=@Studies);
+    declare @newid int=(select max(IdEnrollment)+1 from Enrollment);
+
+    if @x is null
+    begin
+        insert into Enrollment values (@newid,@Semester+1,@idstudies,getdate());
+        update Student set IdEnrollment =@newid from Student inner join Enrollment E on Student.IdEnrollment = E.IdEnrollment inner join Studies S on E.IdStudy = S.IdStudy where Name=@Studies;
+    end
+    update Student set IdEnrollment =@x from Student inner join Enrollment E on Student.IdEnrollment = E.IdEnrollment inner join Studies S on E.IdStudy = S.IdStudy where Name=@Studies;
+end
